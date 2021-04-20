@@ -2,7 +2,6 @@ package importer
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"sync"
 	"time"
@@ -11,25 +10,28 @@ import (
 	rg "github.com/redislabs/redisgraph-go"
 )
 
+// DataWriter writes Trips to the RedisGraph. It is optimised for throughput,
+// using concurrent writers, each writing batches of CREATE commands.
 type DataWriter struct {
 	connPool   *redis.Pool
 	numWorkers int
 	batchSize  int
 
-	// Optimisation: cache the stations we have already created.
+	// Optimisation: cache the station IDs we have already created.
 	stationsCreated sync.Map
 
-	trips   chan Trip
+	trips   chan *Trip
 	done    chan bool
 	workers []dataWriterWorker
 }
 
 type dataWriterWorker struct {
-	id          int
-	dw          *DataWriter
-	conn        redis.Conn
-	pipelineCnt int
-	tripCnt     int
+	id   int
+	dw   *DataWriter
+	conn redis.Conn
+
+	pipelineCnt int // The number of commands waiting to be flushed.
+	tripCnt     int // The number of trips written.
 }
 
 func NewDataWriter(pool *redis.Pool, numWorkers, batchSize int) (*DataWriter, error) {
@@ -37,7 +39,7 @@ func NewDataWriter(pool *redis.Pool, numWorkers, batchSize int) (*DataWriter, er
 		connPool:   pool,
 		numWorkers: numWorkers,
 		batchSize:  batchSize,
-		trips:      make(chan Trip),
+		trips:      make(chan *Trip),
 		done:       make(chan bool),
 	}
 	for i := 1; i <= dw.numWorkers; i++ {
@@ -47,6 +49,7 @@ func NewDataWriter(pool *redis.Pool, numWorkers, batchSize int) (*DataWriter, er
 	return dw, nil
 }
 
+// Calling Close is important to flush any final batches of Trips.
 func (dw *DataWriter) Close() {
 	close(dw.trips)
 	for i := 1; i <= dw.numWorkers; i++ {
@@ -54,23 +57,9 @@ func (dw *DataWriter) Close() {
 	}
 }
 
-func (dw *DataWriter) WriteTripdata(zip_file string) error {
-	tdr, err := NewTripdataReader(zip_file)
-	if err != nil {
-		return err
-	}
-	defer tdr.Close()
-	for {
-		t, err := tdr.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		dw.trips <- *t
-	}
-	return nil
+// Asynchronously writes a Trip to the graph. Failures will panic.
+func (dw *DataWriter) WriteTrip(t *Trip) {
+	dw.trips <- t
 }
 
 func (dw *DataWriter) addWorker() {
@@ -95,26 +84,27 @@ func (dww *dataWriterWorker) Run() {
 		panic(err)
 	}
 
+	// Main consumer loop
 	for t := range dww.dw.trips {
-		if err := dww.importTrip(&t); err != nil {
+		if err := dww.writeTrip(t); err != nil {
 			panic(err)
 		}
 	}
 
 	// Final flush
-	if err := dww.FlushPipeline(); err != nil {
-		panic(err)
-	}
-	if err := dww.Send("INCRBY", "trips", dww.tripCnt); err != nil {
+	if err := dww.flushPipeline(); err != nil {
 		panic(err)
 	}
 
-	log.Printf("[dataWriterWorker.%v]: Done", dww.id)
-
+	if err := dww.conn.Close(); err != nil {
+		panic(err)
+	}
 	dww.dw.done <- true
+	log.Printf("[dww.%v]: Done", dww.id)
 }
 
-func (dww *dataWriterWorker) importTrip(t *Trip) error {
+func (dww *dataWriterWorker) writeTrip(t *Trip) error {
+	dww.tripCnt++
 	err := dww.maybeCreateStation(t.StartStationId, t.StartStationName, t.StartStationLat, t.StartStationLong)
 	if err != nil {
 		return err
@@ -123,27 +113,11 @@ func (dww *dataWriterWorker) importTrip(t *Trip) error {
 	if err != nil {
 		return err
 	}
-
-	err = dww.addTripEdge(t.StartStationId, t.EndStationId, t.StartTime)
-	if err != nil {
-		return err
-	}
-
-	dww.tripCnt++
-	if dww.tripCnt > 200 {
-		err = dww.Send("INCRBY", "trips", dww.tripCnt)
-		if err != nil {
-			return err
-		}
-		dww.tripCnt = 0
-	}
-
-	return nil
+	return dww.addTripEdge(t.StartStationId, t.EndStationId, t.StartTime)
 }
 
 func (dww *dataWriterWorker) addTripEdge(startStationId, endStationId int, t time.Time) error {
-	day := int(t.Weekday())
-	hour := day*24 + t.Hour()
+	hour := int(t.Weekday())*24 + t.Hour()
 	//log.Printf("(s:Station{id: %v})-[e:Trips{h: %v}]->(s:Station{id: %v})", startStationId, hour, endStationId)
 	q := fmt.Sprintf(`
 		MATCH (src:Station{id: $src})
@@ -162,13 +136,13 @@ func (dww *dataWriterWorker) maybeCreateStation(id int, name string, lat, long f
 		return nil
 	}
 	q := `
-	OPTIONAL MATCH (s:Station{id: $id})
-	WITH COUNT(s) AS c WHERE c = 0
-	CREATE (:Station{
-		id: $id,
-		name: $name,
-		loc: point({latitude: $lat, longitude: $long})
-	})
+		OPTIONAL MATCH (s:Station{id: $id})
+		WITH COUNT(s) AS c WHERE c = 0
+		CREATE (:Station{
+			id: $id,
+			name: $name,
+			loc: point({latitude: $lat, longitude: $long})
+		})
 	`
 	err := dww.SendGraphQuery(q, map[string]interface{}{
 		"id": id, "name": name, "lat": lat, "long": long,
@@ -180,17 +154,7 @@ func (dww *dataWriterWorker) maybeCreateStation(id int, name string, lat, long f
 }
 
 func (dww *dataWriterWorker) SendGraphQuery(q string, params map[string]interface{}) error {
-	err := dww.conn.Send("GRAPH.QUERY", "journeys", rg.BuildParamsHeader(params)+q, "--compact")
-	if err != nil {
-		return err
-	}
-	dww.pipelineCnt++
-	if dww.pipelineCnt >= dww.dw.batchSize {
-		if err := dww.FlushPipeline(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return dww.Send("GRAPH.QUERY", "journeys", rg.BuildParamsHeader(params)+q, "--compact")
 }
 
 func (dww *dataWriterWorker) Send(commandName string, args ...interface{}) error {
@@ -200,18 +164,22 @@ func (dww *dataWriterWorker) Send(commandName string, args ...interface{}) error
 	}
 	dww.pipelineCnt++
 	if dww.pipelineCnt >= dww.dw.batchSize {
-		if err := dww.FlushPipeline(); err != nil {
+		if err = dww.flushPipeline(); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (dww *dataWriterWorker) FlushPipeline() error {
+func (dww *dataWriterWorker) flushPipeline() error {
 	log.Printf("[dataWriterWorker.%v]: Flushing %v commands", dww.id, dww.pipelineCnt)
 	if err := dww.conn.Flush(); err != nil {
 		return err
 	}
 	dww.pipelineCnt = 0
+	if err := dww.Send("INCRBY", "trips", dww.tripCnt); err != nil {
+		return err
+	}
+	dww.tripCnt = 0
 	return nil
 }

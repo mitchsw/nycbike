@@ -15,9 +15,9 @@ import (
 	"time"
 )
 
-//const timeFormat = "2006-01-02 15:04:05.0000"
 const timeFormat = "2006-01-02 15:04:05"
 
+// A Trip is a parsed row from the Citi Bike System Data records.
 type Trip struct {
 	StartTime        time.Time
 	StopTime         time.Time
@@ -31,6 +31,7 @@ type Trip struct {
 	EndStationLong   float64
 }
 
+// A TripdataReader downloaded, decompresses, and parses a CitiBike System Data file.
 type TripdataReader struct {
 	headerParsed        bool
 	startTimeIdx        int
@@ -48,8 +49,9 @@ type TripdataReader struct {
 	csv   *csv.Reader
 }
 
+// Creates a new TripdataReader. This function downloads the file and decompresses it before returning.
 func NewTripdataReader(zipUrl string) (*TripdataReader, error) {
-	// Download and open the zip file
+	// Download and open the zip file.
 	resp, err := http.Get(zipUrl)
 	if err != nil {
 		return nil, err
@@ -64,7 +66,7 @@ func NewTripdataReader(zipUrl string) (*TripdataReader, error) {
 		return nil, err
 	}
 
-	// Open the CSV files in the archive.
+	// Open the csv files in the archive.
 	r := &TripdataReader{
 		headerParsed: false,
 	}
@@ -83,7 +85,7 @@ func NewTripdataReader(zipUrl string) (*TripdataReader, error) {
 		r.files = append(r.files, frc)
 	}
 	if len(r.files) == 0 {
-		return nil, errors.New("NewTripdataReader: expected .csv files in archive, found none")
+		return nil, errors.New("expected .csv files in archive, found none")
 	}
 
 	// Setup to read the first file.
@@ -109,7 +111,8 @@ func (r *TripdataReader) Read() (*Trip, error) {
 		}
 		trip, err := r.parseRecord(record)
 		if err != nil {
-			//log.Printf("[tripdata_reader] Skipping trip: %v", err)
+			// Some of the early files have many bad records.
+			// log.Printf("[tripdata_reader] Skipping trip: %v", err)
 			continue
 		}
 		return trip, nil

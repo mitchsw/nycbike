@@ -3,6 +3,7 @@ package importer
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -13,12 +14,14 @@ import (
 	rg "github.com/redislabs/redisgraph-go"
 )
 
+const citiBikeBucket = "https://s3.amazonaws.com/tripdata/"
+
+// Importer reads trip data from the Citi Bike System Data bucket, and writes
+// Trips to the RedisGraph. It is optimised for throughput.
 type Importer struct {
 	connPool *redis.Pool
 	dw       *DataWriter
 }
-
-const citiBikeBucket = "https://s3.amazonaws.com/tripdata/"
 
 func NewImporter(connPool *redis.Pool, numWorkers, batchSize int) (*Importer, error) {
 	dw, err := NewDataWriter(connPool, numWorkers, batchSize)
@@ -28,6 +31,8 @@ func NewImporter(connPool *redis.Pool, numWorkers, batchSize int) (*Importer, er
 	return &Importer{connPool: connPool, dw: dw}, nil
 }
 
+// Runs the long-running parallel importer. If resetGraph is true, the graph is deleted
+// before starting.
 func (i *Importer) Run(resetGraph bool) error {
 	log.Printf("[importer] Importer running...")
 	if resetGraph {
@@ -60,7 +65,6 @@ func (i *Importer) Run(resetGraph bool) error {
 		if err := i.doImport(zipUrl); err != nil {
 			return err
 		}
-
 		_, err = conn.Do("SADD", "SCRAPED_FILES", zipUrl)
 		if err != nil {
 			return err
@@ -99,8 +103,20 @@ func (i *Importer) resetGraph() error {
 }
 
 func (i *Importer) doImport(zipUrl string) error {
-	if err := i.dw.WriteTripdata(zipUrl); err != nil {
+	tdr, err := NewTripdataReader(zipUrl)
+	if err != nil {
 		return err
+	}
+	defer tdr.Close()
+	for {
+		t, err := tdr.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		i.dw.WriteTrip(t)
 	}
 	return nil
 }
@@ -142,10 +158,6 @@ func scrapeZipFiles() ([]string, error) {
 		if !strings.HasSuffix(c.Key, ".zip") {
 			continue
 		}
-		/*if c.Size > 800000 {
-			log.Printf("[importer] Skipping big file for now %v\n", c.Key)
-			continue
-		}*/
 		result = append(result, citiBikeBucket+c.Key)
 	}
 	return result, nil
