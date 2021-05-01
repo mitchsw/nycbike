@@ -15,7 +15,17 @@ import (
 	"time"
 )
 
-const timeFormat = "2006-01-02 15:04:05"
+// Different dumps use different time formats.
+const timeFormat1 = "2006-01-02 15:04:05"
+const timeFormat2 = "1/2/2006 15:04:05"
+
+func parseTime(timeStr string) (time.Time, error) {
+	t, err := time.Parse(timeFormat1, timeStr)
+	if err == nil {
+		return t, nil
+	}
+	return time.Parse(timeFormat2, timeStr)
+}
 
 // A Trip is a parsed row from the Citi Bike System Data records.
 type Trip struct {
@@ -110,9 +120,8 @@ func (r *TripdataReader) Read() (*Trip, error) {
 			return nil, err
 		}
 		trip, err := r.parseRecord(record)
-		if err != nil {
-			// Some of the early files have many bad records.
-			// log.Printf("[tripdata_reader] Skipping trip: %v", err)
+		if err != nil 
+			log.Printf("[tripdata_reader] Skipping trip: %v", err)
 			continue
 		}
 		return trip, nil
@@ -186,11 +195,11 @@ func (r *TripdataReader) readRecord() ([]string, error) {
 func (r *TripdataReader) parseRecord(record []string) (*Trip, error) {
 	t := &Trip{}
 	var err error
-	t.StartTime, err = time.Parse(timeFormat, record[r.startTimeIdx])
+	t.StartTime, err = parseTime(record[r.startTimeIdx])
 	if err != nil {
 		return nil, fmt.Errorf("%w for StartTime; record: %+v", err, record)
 	}
-	t.StopTime, err = time.Parse(timeFormat, record[r.stopTimeIdx])
+	t.StopTime, err = parseTime(record[r.stopTimeIdx])
 	if err != nil {
 		return nil, fmt.Errorf("%w for StopTime; record: %+v", err, record)
 	}

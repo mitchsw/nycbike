@@ -108,6 +108,7 @@ func (i *Importer) doImport(zipUrl string) error {
 		return err
 	}
 	defer tdr.Close()
+	tripCount := 0
 	for {
 		t, err := tdr.Read()
 		if err == io.EOF {
@@ -117,7 +118,10 @@ func (i *Importer) doImport(zipUrl string) error {
 			return err
 		}
 		i.dw.WriteTrip(t)
+		tripCount++
 	}
+	log.Printf("[importer] Wrote %v trips", tripCount)
+
 	return nil
 }
 

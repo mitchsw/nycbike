@@ -1,7 +1,6 @@
 package importer
 
 import (
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -79,8 +78,7 @@ func (dww *dataWriterWorker) Run() {
 	//dww.conn = redis.NewLoggingConn(dww.conn, log.Default(), fmt.Sprintf("[dww.%v.redis]", dww.id))
 	log.Printf("[dww.%v]: Started", dww.id)
 
-	err = dww.Send("CLIENT", "REPLY", "OFF")
-	if err != nil {
+	if err := dww.conn.Send("CLIENT", "REPLY", "OFF"); err != nil {
 		panic(err)
 	}
 
@@ -118,16 +116,15 @@ func (dww *dataWriterWorker) writeTrip(t *Trip) error {
 
 func (dww *dataWriterWorker) addTripEdge(startStationId, endStationId int, t time.Time) error {
 	hour := int(t.Weekday())*24 + t.Hour()
-	//log.Printf("(s:Station{id: %v})-[e:Trips{h: %v}]->(s:Station{id: %v})", startStationId, hour, endStationId)
-	q := fmt.Sprintf(`
+	q := `
 		MATCH (src:Station{id: $src})
 		MATCH (dst:Station{id: $dst})
-		MERGE (src)-[t:Trips{h:%d}]->(dst)
-		ON CREATE SET t.count = 1
-		ON MATCH SET t.count = t.count+1
-	`, hour)
+		MERGE (src)-[t:Trip]->(dst)
+		ON CREATE SET t.counts = [n in range(0, 167) | CASE WHEN n = $hour THEN 1 ELSE 0 END] 
+		ON MATCH SET t.counts = t.counts[0..$hour] + [t.counts[$hour]+1] + t.counts[($hour+1)..168]
+	`
 	return dww.SendGraphQuery(q, map[string]interface{}{
-		"src": startStationId, "dst": endStationId,
+		"src": startStationId, "dst": endStationId, "hour": hour,
 	})
 }
 
@@ -172,14 +169,27 @@ func (dww *dataWriterWorker) Send(commandName string, args ...interface{}) error
 }
 
 func (dww *dataWriterWorker) flushPipeline() error {
-	log.Printf("[dataWriterWorker.%v]: Flushing %v commands", dww.id, dww.pipelineCnt)
+	log.Printf("[dataWriterWorker.%v]: Flushing %v commands, %v trips", dww.id, dww.pipelineCnt, dww.tripCnt)
+	if err := dww.conn.Send("INCRBY", "trips", dww.tripCnt); err != nil {
+		return err
+	}
+	// We toggle CLIENT REPLY ON then OFF so the server can signal the pipeline batch
+	// has been consumed.
+	if err := dww.conn.Send("CLIENT", "REPLY", "ON"); err != nil {
+		return err
+	}
+	if err := dww.conn.Send("CLIENT", "REPLY", "OFF"); err != nil {
+		return err
+	}
 	if err := dww.conn.Flush(); err != nil {
 		return err
 	}
-	dww.pipelineCnt = 0
-	if err := dww.Send("INCRBY", "trips", dww.tripCnt); err != nil {
+	// Block until the CLIENY TRPLU ON -> OK response is consumed.
+	if _, err := dww.conn.Receive(); err != nil {
 		return err
 	}
+
+	dww.pipelineCnt = 0
 	dww.tripCnt = 0
 	return nil
 }

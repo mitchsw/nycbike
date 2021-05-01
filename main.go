@@ -13,12 +13,12 @@ func main() {
 	log.SetOutput(os.Stdout)
 	pool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "redismod-lb-984e5d74c26f3026.elb.us-east-1.amazonaws.com:6379")
+			return redis.Dial("tcp", "172.18.0.3:6379")
 		},
 	}
 	defer pool.Close()
 
-	imp, err := importer.NewImporter(pool, 100, 250)
+	imp, err := importer.NewImporter(pool, 1, 10000)
 	if err != nil {
 		panic(err)
 	}
