@@ -120,7 +120,7 @@ func (r *TripdataReader) Read() (*Trip, error) {
 			return nil, err
 		}
 		trip, err := r.parseRecord(record)
-		if err != nil 
+		if err != nil {
 			log.Printf("[tripdata_reader] Skipping trip: %v", err)
 			continue
 		}

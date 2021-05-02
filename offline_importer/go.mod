@@ -1,4 +1,4 @@
-module github.com/mitchsw/citibike-journies
+module github.com/mitchsw/citibike-journies/offline_importer
 
 go 1.16
 
