@@ -2,17 +2,22 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://github.com/mitchsw/citibike-journeys/frontend",
   "dependencies": {
-    "@mapbox/mapbox-gl-draw": "^1.1.2",
-    "@material-ui/core": "^4.3.0",
-    "@material-ui/icons": "^4.2.1",
+    "@mapbox/mapbox-gl-draw": "^1.2.2",
+    "@material-ui/core": "^4.11.4",
+    "@material-ui/icons": "^4.11.2",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^11.1.0",
+    "@testing-library/user-event": "^12.1.10",
     "gh-pages": "2.0.0",
-    "mapbox-gl": "^1.1.1",
+    "mapbox-gl": "^1.13.1",
     "mapbox-gl-draw-circle": "^1.1.2",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-mapbox-gl": "^4.6.0",
-    "react-scripts": "3.0.1"
+    "react-mapbox-gl": "^4.8.6",
+    "react-scripts": "3.0.1",
+    "web-vitals": "^1.1.1"
   },
   "scripts": {
     "start": "react-scripts start",
