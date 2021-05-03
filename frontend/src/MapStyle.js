@@ -26,9 +26,7 @@ function FeatureStyle(id, color) {
       },
       "paint": {
         "line-color": color,
-        'line-width': [
-          "case", ["get", "user_hover"], 3, 1
-        ],
+        'line-width': 1,
         "line-opacity": 0.6,
       }
     },

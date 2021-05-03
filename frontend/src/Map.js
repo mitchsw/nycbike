@@ -5,6 +5,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { STYLE } from "./MapStyle";
 import { DirectModeOverride, SimpleSelectModeOverride } from "./MapModes";
+const Constants = require('@mapbox/mapbox-gl-draw/src/constants');
 const turfHelpers = require('@turf/helpers');
 const circle = require('@turf/circle').default;
 const distance = require('@turf/distance').default;
@@ -84,7 +85,7 @@ class Map extends React.Component {
     this.draw.add({
       id: id,
       type: "Feature",
-      properties: {isCircle: true, center: center, radiusInKm: radiusInKm, hover: false},
+      properties: {isCircle: true, center: center, radiusInKm: radiusInKm},
       geometry: {
         coordinates: circleFeature.geometry.coordinates,
         type: "Polygon",
@@ -97,6 +98,7 @@ class Map extends React.Component {
 
     this.drawCircle("src", initalCircles.src.center, initalCircles.src.radiusInKm);
     this.drawCircle("dst", initalCircles.dst.center, initalCircles.dst.radiusInKm);
+    this.draw.changeMode(Constants.modes.DIRECT_SELECT, {featureId: "dst"});
     this.updateLine();
     this.notifyParent();
 
