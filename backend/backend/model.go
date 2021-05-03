@@ -60,10 +60,11 @@ type Circle struct {
 
 type JourneyData struct {
 	Egress, Ingress []int
+	// TODO: can I add latency?
 }
 
 func (m *Model) JourneyQuery(src, dst Circle) (*JourneyData, error) {
-	// TODO: tidy up massive RETURN statement.
+	// TODO: tidy up massive RETURN statement. Justify why not UNWIND.
 	query := fmt.Sprintf(`
 		MATCH (src:Station)<-[t:Trip]->(dst:Station)
 		WHERE distance(src.loc, point({latitude: %f, longitude: %f})) < %f

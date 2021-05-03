@@ -1,1 +1,1 @@
-# citibike-journies
+# citibike-journeys

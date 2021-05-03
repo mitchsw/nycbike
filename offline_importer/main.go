@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/gomodule/redigo/redis"
-	"github.com/mitchsw/citibike-journies/offline_importer/importer"
+	"github.com/mitchsw/citibike-journeys/offline_importer/importer"
 )
 
 func main() {

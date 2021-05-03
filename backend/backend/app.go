@@ -33,8 +33,8 @@ func (a *App) Run(addr string) {
 	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
+// TODO: refactor this into a vitals call. Include Redis mem used.
 func (a *App) test(w http.ResponseWriter, _ *http.Request) {
-
 	tc, err := a.Model.TripCount()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())

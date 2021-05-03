@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/mitchsw/citibike-journies/backend/backend"
+	"github.com/mitchsw/citibike-journeys/backend/backend"
 )
 
 func printStartupStatus(m *backend.Model) {
