@@ -2,23 +2,40 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/mitchsw/citibike-journies/backend/backend"
 )
+
+func printStartupStatus(m *backend.Model) {
+	log.Println("Connected to Redis!")
+	tc, err := m.TripCount()
+	if err != nil {
+		panic(err)
+	}
+	sc, err := m.StationCount()
+	if err != nil {
+		panic(err)
+	}
+	ec, err := m.EdgeCount()
+	if err != nil {
+		panic(err)
+	}
+	log.Printf("Found %v trips, %v stations, %v edges\n", tc, sc, ec)
+}
 
 func main() {
 	redisAddress := flag.String("redis", "172.18.0.2:6379", "host:port address of Redis")
 	log.SetOutput(os.Stdout)
-	conn, err := redis.Dial("tcp", *redisAddress)
+
+	m, err := backend.NewModel(*redisAddress)
 	if err != nil {
 		panic(err)
 	}
-	n, err := redis.Int(conn.Do("GET", "trips"))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Found %v trips\n", n)
+	printStartupStatus(m)
+
+	a := backend.NewApp(m)
+	log.Println("Running app..")
+	a.Run(":80")
 }
