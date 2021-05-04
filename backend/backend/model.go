@@ -146,6 +146,13 @@ func (m *Model) JourneyQuery(src, dst Circle) (*JourneyData, error) {
 			data.Ingress = counts
 		}
 	}
+	// Sometimes ingress, egress, or both, can be empty.
+	if len(data.Egress) == 0 {
+		data.Egress = make([]int, 24*7)
+	}
+	if len(data.Ingress) == 0 {
+		data.Ingress = make([]int, 24*7)
+	}
 	// Returning runtime is helpful to show off performance. :)
 	data.RunTimeMs = res.InternalExecutionTime()
 	return data, nil

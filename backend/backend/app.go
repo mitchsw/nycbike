@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -30,7 +31,10 @@ func (a *App) initializeRoutes() {
 }
 
 func (a *App) Run(addr string) {
-	log.Fatal(http.ListenAndServe(addr, a.Router))
+	// TODO: pick a better restriction. For now, allow anyone.
+	originsOk := handlers.AllowedOrigins([]string{"*"})
+
+	log.Fatal(http.ListenAndServe(addr, handlers.CORS(originsOk)(a.Router)))
 }
 
 func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {

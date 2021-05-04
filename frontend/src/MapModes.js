@@ -6,7 +6,7 @@ const length = require('@turf/length').default;
 const along = require('@turf/along').default;
 
 
-const MAX_RADIUS = 2.5;  // km
+const MAX_RADIUS = 1.5;  // km
 
 export const DirectModeOverride = DirectMode;
 export const SimpleSelectModeOverride = SimpleSelectMode;

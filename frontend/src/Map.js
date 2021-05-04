@@ -15,7 +15,7 @@ const ReactMap = ReactMapboxGl({ accessToken: process.env.REACT_APP_MAPBOX_ACCES
 
 const initalCircles = {
   src: {center: [-74.00811876441851, 40.71602161602726], radiusInKm: 0.7},
-  dst: {center: [-73.98468539999953, 40.75472153232781], radiusInKm: 1.7},
+  dst: {center: [-73.98468539999953, 40.75472153232781], radiusInKm: 1.2},
 };
 
 const mapboxProps = {
