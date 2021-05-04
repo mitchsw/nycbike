@@ -25,7 +25,7 @@ func NewApp(model *Model) *App {
 }
 
 func (a *App) initializeRoutes() {
-	a.Router.HandleFunc("/test", a.test).Methods("GET")
+	a.Router.HandleFunc("/vitals", a.vitals).Methods("GET")
 	a.Router.HandleFunc("/journey_query", a.journeyQuery).Methods("GET")
 }
 
@@ -33,15 +33,13 @@ func (a *App) Run(addr string) {
 	log.Fatal(http.ListenAndServe(addr, a.Router))
 }
 
-// TODO: refactor this into a vitals call. Include Redis mem used.
-func (a *App) test(w http.ResponseWriter, _ *http.Request) {
-	tc, err := a.Model.TripCount()
+func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
+	v, err := a.Model.Vitals()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-
-	respondWithJSON(w, http.StatusOK, tc)
+	respondWithJSON(w, http.StatusOK, v)
 }
 
 func (a *App) journeyQuery(w http.ResponseWriter, r *http.Request) {
