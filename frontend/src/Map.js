@@ -11,7 +11,11 @@ const circle = require('@turf/circle').default;
 const distance = require('@turf/distance').default;
 const along = require('@turf/along').default;
 
-const ReactMap = ReactMapboxGl({ accessToken: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN });
+const ReactMap = ReactMapboxGl({ 
+  accessToken: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN,
+  logoPosition: "bottom-right",
+  pitchWithRotate: false,
+});
 
 const initalCircles = {
   src: {center: [-74.00811876441851, 40.71602161602726], radiusInKm: 0.7},
@@ -23,7 +27,7 @@ const mapboxProps = {
   center: [-73.981865, 40.7263966],
   zoom: [12],
   containerStyle: {
-    height: "100vh",
+    height: "100%",
     width: "100%",
   }
 };
@@ -109,11 +113,9 @@ class Map extends React.Component {
 
   render() {
     return (
-      <div>
-        <ReactMap {...mapboxProps} onStyleLoad={map => this.onMapLoaded(map)}>
-          <ZoomControl position="top-left" />
-        </ReactMap>
-      </div>
+      <ReactMap {...mapboxProps} onStyleLoad={map => this.onMapLoaded(map)}>
+        <ZoomControl position="top-left" />
+      </ReactMap>
     );
   }
 }
