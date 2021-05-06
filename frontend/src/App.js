@@ -4,16 +4,16 @@ import Vitals from "./Vitals";
 import {withStyles} from '@material-ui/core';
 
 import AppBar from '@material-ui/core/AppBar';
-import Button from '@material-ui/core/Button';
+import IconButton from '@material-ui/core/IconButton';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
-import Link from '@material-ui/core/Link';
 import Box from '@material-ui/core/Box';
 import Paper from '@material-ui/core/Paper';
 
 // Don't forget to import the CSS
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import GitHubIcon from '@material-ui/icons/GitHub';
 
 const styles = theme => ({
   '@global': {
@@ -24,7 +24,6 @@ const styles = theme => ({
     },
   },
   appBar: {
-    borderBottom: `1px solid ${theme.palette.divider}`,
     background: `#0098e4`,
     color: `white`,
   },
@@ -36,9 +35,6 @@ const styles = theme => ({
     fontFamily: `'Overpass', sans-serif`,
     textTransform: 'uppercase',
     fontWeight: 700,
-  },
-  link: {
-    margin: theme.spacing(1, 1.5),
   },
 
   textContainer: {
@@ -106,6 +102,9 @@ class App extends React.Component {
               Citibike Journeys
             </Typography>
             {this.state.vitals ? <Vitals  {...this.state.vitals}/> : null}
+            <IconButton href="https://github.com/mitchsw/citibike-journeys" target="_blank" variant="outlined" style={{ color: 'white', marginLeft: '10px' }}>
+              <GitHubIcon />
+            </IconButton>
           </Toolbar>
         </AppBar>
 

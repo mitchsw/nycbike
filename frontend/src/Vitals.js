@@ -25,7 +25,7 @@ function Vitals(props) {
     <Paper elevation={4} className={classes.vitals}>
       <Box pt="5px" mr="12px"><TimelineIcon /></Box>
       <Box pt="7px">
-        Serving <strong>{ tripCount }</strong> trips from <strong>{ edgeCount }</strong> edges between <strong>{ stationCount }</strong> stations.
+        Searching <strong>{ tripCount }</strong> trips on graph of <strong>{ stationCount }</strong> stations with <strong>{ edgeCount }</strong> edges.
       </Box>
     </Paper>
     <Paper elevation={4} className={classes.vitals}>

@@ -37,6 +37,13 @@ DirectModeOverride.clickInactive = function (state, e) {
   });
 };
 
+// The vertex selection/unselected logic is intuitive for a
+// line/polygon, but not for a circle in my opinion.
+DirectModeOverride.onFeature = function(state, e) {
+  state.selectedCoordPaths = [];
+  this.startDragging(state, e);
+};
+
 SimpleSelectModeOverride.clickOnFeature = function(state, e) {
   // Stop everything
   //MapboxDraw.doubleClickZoom.disable(this);
