@@ -1,5 +1,6 @@
 import React from 'react';
 import Map from "./Map";
+import JourneyChart from "./JourneyChart";
 import Vitals from "./Vitals";
 import {withStyles} from '@material-ui/core';
 
@@ -39,6 +40,7 @@ const styles = theme => ({
 
   textContainer: {
     position: 'absolute',
+    width: '1000px',
     bottom: 20,
     left: 20,
     paddingLeft: 16,
@@ -112,19 +114,8 @@ class App extends React.Component {
           <Map onFeaturesUpdated={features => this.onFeaturesUpdated(features)} />
         </Box>
         <Paper elevation={4} className={classes.textContainer}>
-          <p>
-            <strong>Src:</strong>
-            {` Center: [${this.state.src.center.join(', ')}]`}
-            {` Radius: ${this.state.src.radiusInKm.toFixed(4)} kms`}
-          </p>
-          <p>
-            <strong>Dst:</strong>
-            {` Center: [${this.state.dst.center.join(', ')}]`}
-            {` Radius: ${this.state.dst.radiusInKm.toFixed(4)} kms`}
-          </p>
-          <p>
-            { journeys_string }
-          </p>
+          <p>{journeys_string}</p>
+          <JourneyChart />
         </Paper>
     </Box>
     );
