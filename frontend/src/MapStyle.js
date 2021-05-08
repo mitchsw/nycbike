@@ -97,7 +97,7 @@ const LINE_STYLE = [
     "type": "line",
     "filter": ["all", ["==", "$type", "LineString"]],
     "layout": {
-      "line-cap": "square",
+      "line-cap": "butt",
       "line-join": "round",
       "line-sort-key": 1,  // TODO: why not working!?
     },
