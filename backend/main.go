@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	redisAddress := flag.String("redis", "172.18.0.2:6379", "host:port address of Redis")
-	listenPort := flag.Int("port", 80, "port to listen on")
+	redisAddress := flag.String("redis", "localhost:6379", "host:port address of Redis")
+	listenPort := flag.Int("port", 9736, "port to listen on")
 	log.SetOutput(os.Stdout)
 
 	m, err := backend.NewModel(*redisAddress)

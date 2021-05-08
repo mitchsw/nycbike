@@ -113,7 +113,7 @@ func journeyQueryStringBuilder() func(src, dst Circle) string {
 		 WHERE distance(src.loc, point({latitude: %f, longitude: %f})) < %f
 		 AND distance(dst.loc, point({latitude: %f, longitude: %f})) < %f
 		 RETURN (startNode(t) = src)`)
-	for i := 1; i < (24 * 7); i++ {
+	for i := 0; i < (24 * 7); i++ {
 		parts.WriteString(fmt.Sprintf(", sum(t.counts[%d])", i))
 	}
 	queryStringtmpl := parts.String()
