@@ -12,6 +12,7 @@ const styles = {
     marginLeft: '8px',
     background: '#095780',
     color: 'white',
+    fontFamily: `'Overpass', sans-serif`
   },
 };
 

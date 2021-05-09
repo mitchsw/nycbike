@@ -4,6 +4,7 @@
   "private": true,
   "homepage": "https://github.com/mitchsw/citibike-journeys/frontend",
   "dependencies": {
+    "@avinlab/react-flash-change": "^1.2.0",
     "@devexpress/dx-core": "^2.7.5",
     "@devexpress/dx-react-chart": "^2.7.5",
     "@devexpress/dx-react-chart-material-ui": "^2.7.5",

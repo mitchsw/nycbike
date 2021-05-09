@@ -109,4 +109,4 @@ const LINE_STYLE = [
     }
 }];
 
-export const STYLE = FeatureStyle("src", "green").concat(FeatureStyle("dst", "red")).concat(LINE_STYLE);
+export const STYLE = FeatureStyle("src", "#027fff").concat(FeatureStyle("dst", "#ff3800")).concat(LINE_STYLE);

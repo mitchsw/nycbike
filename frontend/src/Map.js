@@ -13,19 +13,19 @@ const along = require('@turf/along').default;
 
 const ReactMap = ReactMapboxGl({ 
   accessToken: process.env.REACT_APP_MAPBOX_ACCESS_TOKEN,
-  logoPosition: "bottom-right",
+  logoPosition: "top-right",
   pitchWithRotate: false,
 });
 
 const initalCircles = {
-  src: {center: [-74.00811876441851, 40.71602161602726], radiusInKm: 0.7},
+  src: {center: [-73.98651260399838, 40.715653603071786], radiusInKm: 0.7},
   dst: {center: [-73.98468539999953, 40.75472153232781], radiusInKm: 1.2},
 };
 
 const mapboxProps = {
   style: "mapbox://styles/mapbox/streets-v11",
   center: [-73.981865, 40.7263966],
-  zoom: [12],
+  zoom: [11.75],
   containerStyle: {
     height: "100%",
     width: "100%",

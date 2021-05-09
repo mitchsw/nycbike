@@ -1,18 +1,14 @@
 import React from 'react';
 import Map from "./Map";
-import JourneyChart from "./JourneyChart";
+import JourneyPaper from "./JourneyPaper";
 import Vitals from "./Vitals";
 import {withStyles} from '@material-ui/core';
-
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Box from '@material-ui/core/Box';
-import Paper from '@material-ui/core/Paper';
-
-// Don't forget to import the CSS
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import GitHubIcon from '@material-ui/icons/GitHub';
 
@@ -36,16 +32,6 @@ const styles = theme => ({
     fontFamily: `'Overpass', sans-serif`,
     textTransform: 'uppercase',
     fontWeight: 700,
-  },
-
-  textContainer: {
-    position: 'absolute',
-    width: '1000px',
-    bottom: 20,
-    left: 20,
-    paddingLeft: 16,
-    paddingRight: 16,
-    opacity: 0.9,
   }
 });
 
@@ -76,7 +62,6 @@ class App extends React.Component {
   }
 
   onFeaturesUpdated(features) {
-    this.setState({src: features.src, dst: features.dst, journeys: null})
     fetch(this.journeyQueryUrl(features.src, features.dst))
         .then(res => res.json())
         .then((data) => {
@@ -87,19 +72,11 @@ class App extends React.Component {
 
   render() {
     const { classes } = this.props;
-    let journeys_string;
-    if (this.state.journeys != null) {
-      let egress_sum = this.state.journeys.Egress.reduce((a, b) => a + b, 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-      let ingress_sum = this.state.journeys.Ingress.reduce((a, b) => a + b, 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-      journeys_string = `Egress: ${egress_sum} Ingress: ${ingress_sum} Runtime: ${this.state.journeys.RunTimeMs}ms`
-    } else {
-      journeys_string = "-"
-    }
     return (
       <Box height="100vh" display="flex" flexDirection="column">
         <CssBaseline />
         <AppBar position="static" color="default" elevation={4} className={classes.appBar}>
-          <Toolbar className={classes.toolbar}>
+          <Toolbar variant="dense" className={classes.toolbar}>
             <Typography variant="h6" color="inherit" noWrap className={classes.toolbarTitle}>
               Citibike Journeys
             </Typography>
@@ -113,11 +90,10 @@ class App extends React.Component {
         <Box flex={1} overflow="auto">
           <Map onFeaturesUpdated={features => this.onFeaturesUpdated(features)} />
         </Box>
-        <Paper elevation={4} className={classes.textContainer}>
-          <p>{journeys_string}</p>
-          <JourneyChart />
-        </Paper>
-    </Box>
+        { this.state.journeys && 
+          <JourneyPaper journeys={this.state.journeys} />
+        }
+      </Box>
     );
   }
 }
