@@ -4,25 +4,25 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	rg "github.com/RedisGraph/redisgraph-go"
 	"github.com/gomodule/redigo/redis"
 )
 
 type Model struct {
-	conn                      redis.Conn
-	graph                     rg.Graph
+	connPool                  redis.Pool
 	journeyQueryStringBuilder func(src, dst Circle) string
 }
 
 func NewModel(address string) (*Model, error) {
 	m := &Model{}
-	var err error
-	m.conn, err = redis.Dial("tcp", address)
-	if err != nil {
-		return nil, err
+	m.connPool = redis.Pool{
+		MaxIdle:     5,
+		IdleTimeout: 240 * time.Second,
+		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
+		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", address) },
 	}
-	m.graph = rg.GraphNew("journeys", m.conn)
 	m.journeyQueryStringBuilder = journeyQueryStringBuilder()
 	return m, nil
 }
@@ -51,11 +51,17 @@ func (m *Model) Vitals() (*Vitals, error) {
 }
 
 func (m *Model) TripCount() (int, error) {
-	return redis.Int(m.conn.Do("GET", "trips"))
+	conn := m.connPool.Get()
+	defer conn.Close()
+	return redis.Int(conn.Do("GET", "trips"))
 }
 
 func (m *Model) StationCount() (int, error) {
-	r, err := m.graph.Query("MATCH (s:Station) RETURN count(s)")
+	conn := m.connPool.Get()
+	defer conn.Close()
+	graph := rg.GraphNew("journeys", conn)
+
+	r, err := graph.Query("MATCH (s:Station) RETURN count(s)")
 	if err != nil {
 		return 0, err
 	}
@@ -66,7 +72,11 @@ func (m *Model) StationCount() (int, error) {
 }
 
 func (m *Model) EdgeCount() (int, error) {
-	r, err := m.graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
+	conn := m.connPool.Get()
+	defer conn.Close()
+	graph := rg.GraphNew("journeys", conn)
+
+	r, err := graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
 	if err != nil {
 		return 0, err
 	}
@@ -77,7 +87,10 @@ func (m *Model) EdgeCount() (int, error) {
 }
 
 func (m *Model) MemoryUsageHuman() (string, error) {
-	info, err := redis.String(m.conn.Do("INFO", "memory"))
+	conn := m.connPool.Get()
+	defer conn.Close()
+
+	info, err := redis.String(conn.Do("INFO", "memory"))
 	if err != nil {
 		return "", err
 	}
@@ -95,7 +108,11 @@ type Station struct {
 }
 
 func (m *Model) GetStations() ([]Station, error) {
-	res, err := m.graph.Query(
+	conn := m.connPool.Get()
+	defer conn.Close()
+	graph := rg.GraphNew("journeys", conn)
+
+	res, err := graph.Query(
 		"MATCH (s:Station) RETURN s.name, s.loc")
 	if err != nil {
 		return nil, err
@@ -151,7 +168,11 @@ func journeyQueryStringBuilder() func(src, dst Circle) string {
 }
 
 func (m *Model) JourneyQuery(src, dst Circle) (*JourneyData, error) {
-	res, err := m.graph.Query(m.journeyQueryStringBuilder(src, dst))
+	conn := m.connPool.Get()
+	defer conn.Close()
+	graph := rg.GraphNew("journeys", conn)
+
+	res, err := graph.Query(m.journeyQueryStringBuilder(src, dst))
 	if err != nil {
 		return nil, err
 	}
