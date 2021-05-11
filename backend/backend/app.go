@@ -12,14 +12,14 @@ import (
 )
 
 type App struct {
-	Router *mux.Router
-	Model  *Model
+	Router    *mux.Router
+	ModelPool *ModelPool
 }
 
-func NewApp(model *Model) *App {
+func NewApp(modelPool *ModelPool) *App {
 	a := &App{
-		Router: mux.NewRouter(),
-		Model:  model,
+		Router:    mux.NewRouter(),
+		ModelPool: modelPool,
 	}
 	a.initializeRoutes()
 	return a
@@ -39,9 +39,9 @@ func (a *App) Run(addr string) {
 }
 
 func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
-	h := a.Model.Get()
-	defer h.Close()
-	v, err := h.Vitals()
+	m := a.ModelPool.Get()
+	defer m.Close()
+	v, err := m.Vitals()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -50,9 +50,9 @@ func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (a *App) stations(w http.ResponseWriter, _ *http.Request) {
-	h := a.Model.Get()
-	defer h.Close()
-	v, err := h.GetStations()
+	m := a.ModelPool.Get()
+	defer m.Close()
+	v, err := m.GetStations()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -89,9 +89,9 @@ func (a *App) journeyQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h := a.Model.Get()
-	defer h.Close()
-	v, err := h.JourneyQuery(src, dst)
+	m := a.ModelPool.Get()
+	defer m.Close()
+	v, err := m.JourneyQuery(src, dst)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

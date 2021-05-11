@@ -9,11 +9,11 @@ import (
 	"github.com/mitchsw/citibike-journeys/backend/backend"
 )
 
-func PrintVitals(m *backend.Model) {
-	h := m.Get()
-	defer h.Close()
+func PrintVitals(mp *backend.ModelPool) {
+	m := mp.Get()
+	defer m.Close()
 
-	v, err := h.Vitals()
+	v, err := m.Vitals()
 	if err != nil {
 		panic(err)
 	}
@@ -26,14 +26,14 @@ func main() {
 	listenPort := flag.Int("port", 9736, "port to listen on")
 	log.SetOutput(os.Stdout)
 
-	m, err := backend.NewModel(*redisAddress)
+	mp, err := backend.NewModelPool(*redisAddress)
 	if err != nil {
 		panic(err)
 	}
 	log.Println("Connected to Redis!")
-	PrintVitals(m)
+	PrintVitals(mp)
 
-	a := backend.NewApp(m)
+	a := backend.NewApp(mp)
 	log.Printf("Running app on port %d...", *listenPort)
 	a.Run(fmt.Sprintf(":%d", *listenPort))
 }

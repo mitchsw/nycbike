@@ -12,6 +12,7 @@ import (
 
 func main() {
 	redisAddress := flag.String("redis", "172.18.0.2:6379", "host:port address of Redis")
+	resetGraph := flag.Bool("reset_graph", false, "Reset graph before importing. Should be true for first import")
 	log.SetOutput(os.Stdout)
 	pool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
@@ -24,7 +25,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = imp.Run( /*resetGraph=*/ false)
+	err = imp.Run(*resetGraph)
 	if err != nil {
 		panic(err)
 	}

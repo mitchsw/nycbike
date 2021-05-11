@@ -10,40 +10,45 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-type Model struct {
+// A ModelPool is used to create cheap Model structs used per request.
+type ModelPool struct {
 	connPool                  redis.Pool
 	journeyQueryStringBuilder func(src, dst Circle) string
 }
 
-func NewModel(address string) (*Model, error) {
-	m := &Model{}
-	m.connPool = redis.Pool{
+func NewModelPool(address string) (*ModelPool, error) {
+	mp := &ModelPool{}
+	mp.connPool = redis.Pool{
 		MaxIdle:     5,
 		IdleTimeout: 240 * time.Second,
 		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", address) },
 	}
-	m.journeyQueryStringBuilder = journeyQueryStringBuilder()
-	return m, nil
+	mp.journeyQueryStringBuilder = journeyQueryStringBuilder()
+	return mp, nil
 }
 
-type ModelHandle struct {
+func (mp *ModelPool) Close() error {
+	return mp.connPool.Close()
+}
+
+type Model struct {
 	conn                      redis.Conn
 	graph                     rg.Graph
 	journeyQueryStringBuilder func(src, dst Circle) string
 }
 
-// Returns a new ModelHandle using the internal redis connection pool.
-// ModelHandle.Close() should be called before destroying the handle.
-func (m *Model) Get() *ModelHandle {
-	h := &ModelHandle{}
-	h.conn = m.connPool.Get()
-	h.graph = rg.GraphNew("journeys", h.conn)
-	h.journeyQueryStringBuilder = m.journeyQueryStringBuilder
-	return h
+// Returns a new Model to be used by a request. Close() should be
+// called on the Model before the request ends.
+func (mp *ModelPool) Get() *Model {
+	m := &Model{}
+	m.conn = mp.connPool.Get()
+	m.graph = rg.GraphNew("journeys", m.conn)
+	m.journeyQueryStringBuilder = mp.journeyQueryStringBuilder
+	return m
 }
 
-func (h *ModelHandle) Close() error {
-	return h.conn.Close()
+func (m *Model) Close() error {
+	return m.conn.Close()
 }
 
 type Vitals struct {
@@ -51,30 +56,30 @@ type Vitals struct {
 	MemoryUsageHuman                   string
 }
 
-func (h *ModelHandle) Vitals() (*Vitals, error) {
+func (m *Model) Vitals() (*Vitals, error) {
 	var v Vitals
 	var err error
-	if v.TripCount, err = h.TripCount(); err != nil {
+	if v.TripCount, err = m.TripCount(); err != nil {
 		return nil, err
 	}
-	if v.StationCount, err = h.StationCount(); err != nil {
+	if v.StationCount, err = m.StationCount(); err != nil {
 		return nil, err
 	}
-	if v.EdgeCount, err = h.EdgeCount(); err != nil {
+	if v.EdgeCount, err = m.EdgeCount(); err != nil {
 		return nil, err
 	}
-	if v.MemoryUsageHuman, err = h.MemoryUsageHuman(); err != nil {
+	if v.MemoryUsageHuman, err = m.MemoryUsageHuman(); err != nil {
 		return nil, err
 	}
 	return &v, nil
 }
 
-func (h *ModelHandle) TripCount() (int, error) {
-	return redis.Int(h.conn.Do("GET", "trips"))
+func (m *Model) TripCount() (int, error) {
+	return redis.Int(m.conn.Do("GET", "trips"))
 }
 
-func (h *ModelHandle) StationCount() (int, error) {
-	r, err := h.graph.Query("MATCH (s:Station) RETURN count(s)")
+func (m *Model) StationCount() (int, error) {
+	r, err := m.graph.Query("MATCH (s:Station) RETURN count(s)")
 	if err != nil {
 		return 0, err
 	}
@@ -84,8 +89,8 @@ func (h *ModelHandle) StationCount() (int, error) {
 	return r.Record().GetByIndex(0).(int), nil
 }
 
-func (h *ModelHandle) EdgeCount() (int, error) {
-	r, err := h.graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
+func (m *Model) EdgeCount() (int, error) {
+	r, err := m.graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
 	if err != nil {
 		return 0, err
 	}
@@ -95,8 +100,8 @@ func (h *ModelHandle) EdgeCount() (int, error) {
 	return r.Record().GetByIndex(0).(int), nil
 }
 
-func (h *ModelHandle) MemoryUsageHuman() (string, error) {
-	info, err := redis.String(h.conn.Do("INFO", "memory"))
+func (m *Model) MemoryUsageHuman() (string, error) {
+	info, err := redis.String(m.conn.Do("INFO", "memory"))
 	if err != nil {
 		return "", err
 	}
@@ -112,8 +117,10 @@ type Coord struct {
 	Lat, Long float64
 }
 
-func (h *ModelHandle) GetStations() ([]Coord, error) {
-	res, err := h.graph.Query(
+func (m *Model) GetStations() ([]Coord, error) {
+	// WARN: For redisgraph-so to understand RETURNING a point,
+	// https://github.com/RedisGraph/redisgraph-go/pull/45 is required.
+	res, err := m.graph.Query(
 		"MATCH (s:Station) RETURN s.name, s.loc")
 	if err != nil {
 		return nil, err
@@ -160,8 +167,8 @@ func journeyQueryStringBuilder() func(src, dst Circle) string {
 	}
 }
 
-func (h *ModelHandle) JourneyQuery(src, dst Circle) (*JourneyData, error) {
-	res, err := h.graph.Query(h.journeyQueryStringBuilder(src, dst))
+func (m *Model) JourneyQuery(src, dst Circle) (*JourneyData, error) {
+	res, err := m.graph.Query(m.journeyQueryStringBuilder(src, dst))
 	if err != nil {
 		return nil, err
 	}
