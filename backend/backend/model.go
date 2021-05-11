@@ -89,6 +89,30 @@ func (m *Model) MemoryUsageHuman() (string, error) {
 	return "", errors.New("cannot find used_memory_human in INFO")
 }
 
+type Station struct {
+	Name      string
+	Lat, Long float64
+}
+
+func (m *Model) GetStations() ([]Station, error) {
+	res, err := m.graph.Query(
+		"MATCH (s:Station) RETURN s.name, s.loc")
+	if err != nil {
+		return nil, err
+	}
+	var result []Station
+	for res.Next() {
+		r := res.Record()
+		pos := r.GetByIndex(1).(map[string]float64)
+		result = append(result, Station{
+			Name: r.GetByIndex(0).(string),
+			Lat:  pos["latitude"],
+			Long: pos["longitude"],
+		})
+	}
+	return result, nil
+}
+
 type Coord struct {
 	Lat, Long float64
 }

@@ -27,6 +27,7 @@ func NewApp(model *Model) *App {
 
 func (a *App) initializeRoutes() {
 	a.Router.HandleFunc("/vitals", a.vitals).Methods("GET")
+	a.Router.HandleFunc("/stations", a.stations).Methods("GET")
 	a.Router.HandleFunc("/journey_query", a.journeyQuery).Methods("GET")
 }
 
@@ -39,6 +40,15 @@ func (a *App) Run(addr string) {
 
 func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
 	v, err := a.Model.Vitals()
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondWithJSON(w, http.StatusOK, v)
+}
+
+func (a *App) stations(w http.ResponseWriter, _ *http.Request) {
+	v, err := a.Model.GetStations()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
