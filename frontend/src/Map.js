@@ -1,7 +1,8 @@
 import React from "react";
-import ReactMapboxGl from "react-mapbox-gl";
+import ReactMapboxGl, { Layer, Feature } from "react-mapbox-gl";
 import { ZoomControl } from "react-mapbox-gl";
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import 'mapbox-gl/dist/mapbox-gl.css';
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
 import { STYLE } from "./MapStyle";
 import { DirectModeOverride, SimpleSelectModeOverride } from "./MapModes";
@@ -48,6 +49,12 @@ class Map extends React.Component {
       },
       styles: STYLE,
     });
+  }
+  
+  static getDerivedStateFromProps(props, state) {
+    return {
+      stations: props.stations
+    };
   }
 
   updateLine() {
@@ -112,9 +119,15 @@ class Map extends React.Component {
   };
 
   render() {
+    const { stations } = this.state;
     return (
       <ReactMap {...mapboxProps} onStyleLoad={map => this.onMapLoaded(map)}>
         <ZoomControl position="top-left" />
+        <Layer type="symbol" layout={{ 'icon-image': 'marker-15', 'icon-allow-overlap': true }}>
+          {stations && stations.map((station) => (
+            <Feature coordinates={[station.Long, station.Lat]} />
+          ))}
+        </Layer>
       </ReactMap>
     );
   }

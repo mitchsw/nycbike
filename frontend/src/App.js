@@ -55,6 +55,12 @@ class App extends React.Component {
           this.setState({ vitals: data })
         })
         .catch(console.log)
+    fetch(`${process.env.REACT_APP_BACKEND_URL}stations`)
+        .then(res => res.json())
+        .then((data) => {
+          this.setState({ stations: data })
+        })
+        .catch(console.log)
   }
 
   journeyQueryUrl(src, dst) {
@@ -88,7 +94,7 @@ class App extends React.Component {
         </AppBar>
 
         <Box flex={1} overflow="auto">
-          <Map onFeaturesUpdated={features => this.onFeaturesUpdated(features)} />
+          <Map onFeaturesUpdated={features => this.onFeaturesUpdated(features)} stations={this.state.stations} />
         </Box>
         { this.state.journeys && 
           <JourneyPaper journeys={this.state.journeys} />

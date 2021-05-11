@@ -101,14 +101,14 @@ class JourneyChart extends React.PureComponent {
           <ValueAxis showGrid={false} showTicks={true} tickFormat={valueTickFormat} />
 
           <AreaSeries
-            name="Ingress"
-            valueField="ingress"
+            name="Egress"
+            valueField="egress"
             argumentField="hour"
             seriesComponent={Area}
           />
           <AreaSeries
-            name="Egress"
-            valueField="egress"
+            name="Ingress"
+            valueField="ingress"
             argumentField="hour"
             seriesComponent={Area}
           />
