@@ -39,7 +39,9 @@ func (a *App) Run(addr string) {
 }
 
 func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
-	v, err := a.Model.Vitals()
+	h := a.Model.Get()
+	defer h.Close()
+	v, err := h.Vitals()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -48,7 +50,9 @@ func (a *App) vitals(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (a *App) stations(w http.ResponseWriter, _ *http.Request) {
-	v, err := a.Model.GetStations()
+	h := a.Model.Get()
+	defer h.Close()
+	v, err := h.GetStations()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -85,7 +89,9 @@ func (a *App) journeyQuery(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	v, err := a.Model.JourneyQuery(src, dst)
+	h := a.Model.Get()
+	defer h.Close()
+	v, err := h.JourneyQuery(src, dst)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 		return

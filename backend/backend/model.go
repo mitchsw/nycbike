@@ -20,11 +20,30 @@ func NewModel(address string) (*Model, error) {
 	m.connPool = redis.Pool{
 		MaxIdle:     5,
 		IdleTimeout: 240 * time.Second,
-		// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
-		Dial: func() (redis.Conn, error) { return redis.Dial("tcp", address) },
+		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", address) },
 	}
 	m.journeyQueryStringBuilder = journeyQueryStringBuilder()
 	return m, nil
+}
+
+type ModelHandle struct {
+	conn                      redis.Conn
+	graph                     rg.Graph
+	journeyQueryStringBuilder func(src, dst Circle) string
+}
+
+// Returns a new ModelHandle using the internal redis connection pool.
+// ModelHandle.Close() should be called before destroying the handle.
+func (m *Model) Get() *ModelHandle {
+	h := &ModelHandle{}
+	h.conn = m.connPool.Get()
+	h.graph = rg.GraphNew("journeys", h.conn)
+	h.journeyQueryStringBuilder = m.journeyQueryStringBuilder
+	return h
+}
+
+func (h *ModelHandle) Close() error {
+	return h.conn.Close()
 }
 
 type Vitals struct {
@@ -32,36 +51,30 @@ type Vitals struct {
 	MemoryUsageHuman                   string
 }
 
-func (m *Model) Vitals() (*Vitals, error) {
+func (h *ModelHandle) Vitals() (*Vitals, error) {
 	var v Vitals
 	var err error
-	if v.TripCount, err = m.TripCount(); err != nil {
+	if v.TripCount, err = h.TripCount(); err != nil {
 		return nil, err
 	}
-	if v.StationCount, err = m.StationCount(); err != nil {
+	if v.StationCount, err = h.StationCount(); err != nil {
 		return nil, err
 	}
-	if v.EdgeCount, err = m.EdgeCount(); err != nil {
+	if v.EdgeCount, err = h.EdgeCount(); err != nil {
 		return nil, err
 	}
-	if v.MemoryUsageHuman, err = m.MemoryUsageHuman(); err != nil {
+	if v.MemoryUsageHuman, err = h.MemoryUsageHuman(); err != nil {
 		return nil, err
 	}
 	return &v, nil
 }
 
-func (m *Model) TripCount() (int, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-	return redis.Int(conn.Do("GET", "trips"))
+func (h *ModelHandle) TripCount() (int, error) {
+	return redis.Int(h.conn.Do("GET", "trips"))
 }
 
-func (m *Model) StationCount() (int, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-	graph := rg.GraphNew("journeys", conn)
-
-	r, err := graph.Query("MATCH (s:Station) RETURN count(s)")
+func (h *ModelHandle) StationCount() (int, error) {
+	r, err := h.graph.Query("MATCH (s:Station) RETURN count(s)")
 	if err != nil {
 		return 0, err
 	}
@@ -71,12 +84,8 @@ func (m *Model) StationCount() (int, error) {
 	return r.Record().GetByIndex(0).(int), nil
 }
 
-func (m *Model) EdgeCount() (int, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-	graph := rg.GraphNew("journeys", conn)
-
-	r, err := graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
+func (h *ModelHandle) EdgeCount() (int, error) {
+	r, err := h.graph.Query("MATCH (:Station)-[t:Trip]->(:Station) RETURN count(t)")
 	if err != nil {
 		return 0, err
 	}
@@ -86,11 +95,8 @@ func (m *Model) EdgeCount() (int, error) {
 	return r.Record().GetByIndex(0).(int), nil
 }
 
-func (m *Model) MemoryUsageHuman() (string, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-
-	info, err := redis.String(conn.Do("INFO", "memory"))
+func (h *ModelHandle) MemoryUsageHuman() (string, error) {
+	info, err := redis.String(h.conn.Do("INFO", "memory"))
 	if err != nil {
 		return "", err
 	}
@@ -106,12 +112,8 @@ type Coord struct {
 	Lat, Long float64
 }
 
-func (m *Model) GetStations() ([]Coord, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-	graph := rg.GraphNew("journeys", conn)
-
-	res, err := graph.Query(
+func (h *ModelHandle) GetStations() ([]Coord, error) {
+	res, err := h.graph.Query(
 		"MATCH (s:Station) RETURN s.name, s.loc")
 	if err != nil {
 		return nil, err
@@ -158,12 +160,8 @@ func journeyQueryStringBuilder() func(src, dst Circle) string {
 	}
 }
 
-func (m *Model) JourneyQuery(src, dst Circle) (*JourneyData, error) {
-	conn := m.connPool.Get()
-	defer conn.Close()
-	graph := rg.GraphNew("journeys", conn)
-
-	res, err := graph.Query(m.journeyQueryStringBuilder(src, dst))
+func (h *ModelHandle) JourneyQuery(src, dst Circle) (*JourneyData, error) {
+	res, err := h.graph.Query(h.journeyQueryStringBuilder(src, dst))
 	if err != nil {
 		return nil, err
 	}
