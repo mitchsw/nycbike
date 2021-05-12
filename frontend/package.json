@@ -2,7 +2,6 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://github.com/mitchsw/citibike-journeys/frontend",
   "dependencies": {
     "@avinlab/react-flash-change": "^1.2.0",
     "@devexpress/dx-core": "^2.7.5",

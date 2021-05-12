@@ -3,3 +3,6 @@
 
 # Editor files
 .vscode/launch.json
+
+# Redis backup
+redis_data/

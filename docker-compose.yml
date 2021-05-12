@@ -1,0 +1,29 @@
+version: '3.3'
+
+services:
+    redismod:
+        image: redislabs/redismod
+        command: /usr/local/etc/redis/redis.conf
+        restart: always
+        volumes:
+            - ./redis.conf:/usr/local/etc/redis/redis.conf
+            - ./redis_data/:/data/
+
+    backend:
+        depends_on:
+            - redismod
+        image: citibikie-journeys/backend
+        command: [ "--redis=redismod:6379", "--port=3000"]
+        restart: always
+
+    nginx: 
+        depends_on:
+            - backend
+        image: nginx:latest
+        restart: always
+        volumes:
+            - ./nginx.conf:/etc/nginx/nginx.conf
+            - ./frontend/build:/etc/nginx/html/
+        ports:
+            - 80:80
+            - 443:443

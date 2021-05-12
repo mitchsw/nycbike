@@ -23,7 +23,9 @@ func PrintVitals(mp *backend.ModelPool) {
 
 func main() {
 	redisAddress := flag.String("redis", "localhost:6379", "host:port address of Redis")
-	listenPort := flag.Int("port", 9736, "port to listen on")
+	listenPort := flag.Int("port", 80, "port to listen on")
+	flag.Parse()
+
 	log.SetOutput(os.Stdout)
 
 	mp, err := backend.NewModelPool(*redisAddress)
