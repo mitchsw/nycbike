@@ -1,5 +1,3 @@
-github.com/RedisGraph/redisgraph-go v1.0.1-0.20210228181239-852ca0de336f h1:rYdUTaSk82zd1tVQ3C9UHbzLi7HUD+ppWlAjr0j0AAI=
-github.com/RedisGraph/redisgraph-go v1.0.1-0.20210228181239-852ca0de336f/go.mod h1:U2/4ZILEyET5BMJvt3s0fiTlxTvpm9rJNpjQo73sn2c=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/felixge/httpsnoop v1.0.1 h1:lvB5Jl89CsZtGIWuTcDM1E/vkVs49/Ml7JJe07l8SPQ=
@@ -14,6 +12,8 @@ github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB7
 github.com/mattn/go-runewidth v0.0.7/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
 github.com/mattn/go-runewidth v0.0.9 h1:Lm995f3rfxdpd6TSmuVCHVb/QhupuXlYr8sCI/QdE+0=
 github.com/mattn/go-runewidth v0.0.9/go.mod h1:H031xJmbD/WCDINGzjvQ9THkh0rPKHF+m2gUSrubnMI=
+github.com/mitchsw/redisgraph-go v0.2.0 h1:FNzPbuYqW+kLqm3byZlUvS5h5cWi6eWwr2ruTDPoOJ4=
+github.com/mitchsw/redisgraph-go v0.2.0/go.mod h1:U2/4ZILEyET5BMJvt3s0fiTlxTvpm9rJNpjQo73sn2c=
 github.com/olekukonko/tablewriter v0.0.4/go.mod h1:zq6QwlOf5SlnkVbMSr5EoBv3636FWnp+qbPhuoO21uA=
 github.com/olekukonko/tablewriter v0.0.5 h1:P2Ga83D34wi1o9J6Wh1mRuqd4mF/x/lgBS7N7AbDhec=
 github.com/olekukonko/tablewriter v0.0.5/go.mod h1:hPp6KlRPjbx+hW8ykQs1w3UBbZlj6HuIJcUGPhkA7kY=

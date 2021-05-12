@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+	"time"
 
 	"github.com/mitchsw/citibike-journeys/backend/backend"
 )
@@ -13,10 +15,17 @@ func PrintVitals(mp *backend.ModelPool) {
 	m := mp.Get()
 	defer m.Close()
 
+	// On start up, keep polling on LOADING errors.
 	v, err := m.Vitals()
-	if err != nil {
-		panic(err)
+	for err != nil {
+		if !strings.HasPrefix(err.Error(), "LOADING") {
+			panic(err)
+		}
+		log.Println(err)
+		time.Sleep(5 * time.Second)
+		v, err = m.Vitals()
 	}
+
 	log.Printf("Found %v trips, %v stations, %v edges. Memory usage: %v",
 		v.TripCount, v.StationCount, v.EdgeCount, v.MemoryUsageHuman)
 }
