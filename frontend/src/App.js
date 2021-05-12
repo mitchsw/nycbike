@@ -1,7 +1,7 @@
 import React from 'react';
-import Map from "./Map";
-import JourneyPaper from "./JourneyPaper";
-import Vitals from "./Vitals";
+import Map from './Map';
+import JourneyPaper from './JourneyPaper';
+import Vitals from './Vitals';
 import {withStyles} from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
@@ -12,7 +12,7 @@ import Box from '@material-ui/core/Box';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
 import GitHubIcon from '@material-ui/icons/GitHub';
 
-const styles = theme => ({
+const styles = (theme) => ({
   '@global': {
     ul: {
       margin: 0,
@@ -20,64 +20,64 @@ const styles = theme => ({
       listStyle: 'none',
     },
   },
-  appBar: {
+  'appBar': {
     background: `#0098e4`,
     color: `white`,
   },
-  toolbar: {
+  'toolbar': {
     flexWrap: 'wrap',
   },
-  toolbarTitle: {
+  'toolbarTitle': {
     flexGrow: 1,
     fontFamily: `'Overpass', sans-serif`,
     textTransform: 'uppercase',
     fontWeight: 700,
-  }
+  },
 });
 
 class App extends React.Component {
-
   constructor(props) {
     super(props);
     this.initialState = {
-      src: {center: [0,0], radiusInKm: 0},
-      dst: {center: [0,0], radiusInKm: 0},
+      src: {center: [0, 0], radiusInKm: 0},
+      dst: {center: [0, 0], radiusInKm: 0},
       journeys: null,
       vitals: null,
     };
-    this.state = { ...this.initialState };
+    this.state = {...this.initialState};
   }
 
   componentDidMount() {
     fetch(`${process.env.REACT_APP_BACKEND_URL}vitals`)
-        .then(res => res.json())
+        .then((res) => res.json())
         .then((data) => {
-          this.setState({ vitals: data })
+          this.setState({vitals: data});
         })
-        .catch(console.log)
+        .catch(console.log);
     fetch(`${process.env.REACT_APP_BACKEND_URL}stations`)
-        .then(res => res.json())
+        .then((res) => res.json())
         .then((data) => {
-          this.setState({ stations: data })
+          this.setState({stations: data});
         })
-        .catch(console.log)
+        .catch(console.log);
   }
 
   journeyQueryUrl(src, dst) {
-    return `${process.env.REACT_APP_BACKEND_URL}journey_query?src_lat=${src.center[1]}&src_long=${src.center[0]}&src_radius=${src.radiusInKm}&dst_lat=${dst.center[1]}&dst_long=${dst.center[0]}&dst_radius=${dst.radiusInKm}`
+    return `${process.env.REACT_APP_BACKEND_URL}journey_query?src_lat=${src.center[1]}&src_long=${src.center[0]}&src_radius=${src.radiusInKm}&dst_lat=${dst.center[1]}&dst_long=${dst.center[0]}&dst_radius=${dst.radiusInKm}`;
   }
 
   onFeaturesUpdated(features) {
     fetch(this.journeyQueryUrl(features.src, features.dst))
-        .then(res => res.json())
+        .then((res) => res.json())
         .then((data) => {
-          this.setState({ journeys: data })
+          this.setState({journeys: data});
         })
-        .catch(console.log)
+        .catch(console.log);
   }
 
+  // eslint-disable-next-line require-jsdoc
   render() {
-    const { classes } = this.props;
+    const {classes} = this.props;
     return (
       <Box height="100vh" display="flex" flexDirection="column">
         <CssBaseline />
@@ -86,17 +86,23 @@ class App extends React.Component {
             <Typography variant="h6" color="inherit" noWrap className={classes.toolbarTitle}>
               Citibike Journeys
             </Typography>
-            {this.state.vitals ? <Vitals  {...this.state.vitals}/> : null}
-            <IconButton href="https://github.com/mitchsw/citibike-journeys" target="_blank" variant="outlined" style={{ color: 'white', marginLeft: '10px' }}>
+            {this.state.vitals ? <Vitals {...this.state.vitals}/> : null}
+            <IconButton
+              href="https://github.com/mitchsw/citibike-journeys"
+              target="_blank"
+              variant="outlined"
+              style={{color: 'white', marginLeft: '10px'}}>
               <GitHubIcon />
             </IconButton>
           </Toolbar>
         </AppBar>
 
         <Box flex={1} overflow="auto">
-          <Map onFeaturesUpdated={features => this.onFeaturesUpdated(features)} stations={this.state.stations} />
+          <Map
+            onFeaturesUpdated={(features) => this.onFeaturesUpdated(features)}
+            stations={this.state.stations} />
         </Box>
-        { this.state.journeys && 
+        { this.state.journeys &&
           <JourneyPaper journeys={this.state.journeys} />
         }
       </Box>
