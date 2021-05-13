@@ -2,7 +2,7 @@
 
 _[Build on Redis Hackathon](https://redislabs.com/hackathon-2021/) entry, mitchsw, 2021-05-12._
 
-A visual geospatial index of over 56 million bikeshare trips across NYC. This could be helpful to capacity plan across the network, allowing you to investigate aggregated rush hour and weekend travel patterns in milliseconds!
+A visual geospatial index of over 58 million bikeshare trips across NYC. This could be helpful to capacity plan across the network, allowing you to investigate aggregated rush hour and weekend travel patterns in milliseconds!
 
 **Live Demo**: https://citibike.mitchsw.com/
 
@@ -65,7 +65,7 @@ This is my _first ever_ React project, be nice! ;)
 
 The offline importer iteratively downloads the public [Citi Bike trip data](https://www.citibikenyc.com/system-data), unzips each archive, and indexes all the trips into the `journeys` graph.
 
-The graph contains every `:Station` as a node, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of their location. All of the 56 million journeys are represented as increments on the edge between the `src` and `dst` stations. The graph is setup to aggregate trips based on their time of the week (`7*24` hour buckets). This graph could easily be extended to aggregate trips on other dimensions.
+The graph contains every `:Station` as a node, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of their location. All of the 58 million journeys are represented as increments on the edge between the `src` and `dst` stations. The graph is setup to aggregate trips based on their time of the week (`7*24` hour buckets). This graph could easily be extended to aggregate trips on other dimensions.
 
 To index a single trip, the following Cypher query is used:
 
@@ -89,12 +89,13 @@ Start the visual UI using Docker Compose:
 
 ```sh
  $ docker build -t citibike-journeys backend
+ $ cd frontend; yarn build; cd ..
  $ docker-compose up
 
 redismod_1  | 1:C 13 May 2021 03:12:18.017 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
  [...]
 backend_1   | 2021/05/13 03:09:35 Connected to Redis!
-backend_1   | 2021/05/13 03:09:55 Found 56030910 trips, 1575 stations, 777793 edges. Memory usage: 2.33G
+backend_1   | 2021/05/13 03:09:55 Found 58070379 trips, 1638 stations, 818056 edges. Memory usage: 2.46G
 backend_1   | 2021/05/13 03:09:55 Running app on port 3000...
  [...]
 nginx_1     | 172.18.0.1 - - [13/May/2021:03:13:02 +0000] "GET /api/journey_query?src_lat=40.715653603071786&src_long=-73.98651260399838&src_radius=0.7&dst_lat=40.75472153232781&dst_long=-73.98468539999953&dst_radius=1.2 HTTP/1.1" 200 1328 "http://localhost/" "Mozilla/5.0"
