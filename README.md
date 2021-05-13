@@ -6,9 +6,9 @@ A visual geospatial index of over 58 million bikeshare trips across NYC. This co
 
 **Live Demo**: https://citibike.mitchsw.com/
 
-<img src="https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/full_ui.png?raw=true">*Full visual UI.*
+![Full visual UI](https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/full_ui.png?raw=true)*Full visual UI.*
 
-<img src="https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/zoom_ui.png?raw=true">*Zoomed-in view of trips between a few stations.*
+![Zoomed-in UI](https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/zoom_ui.png?raw=true)*Zoomed-in view of trips between a few stations.*
 
 ## System Overview
 
@@ -27,7 +27,7 @@ This project uses the [redismod](https://hub.docker.com/r/redislabs/redismod) Do
 
 ### backend
 
-The Go backend uses the [redisgraph-go](https://github.com/RedisGraph/redisgraph-go) library to proxy graph queries from the frontend. The Go library didn't support the new `point()` type, so I sent RedisGraph/redisgraph-go#45 adding this feature.
+The Go backend uses the [redisgraph-go](https://github.com/RedisGraph/redisgraph-go) library to proxy graph queries from the frontend. The Go library didn't support the new `point()` type, so I sent PR [redisgraph-go#45](https://github.com/RedisGraph/redisgraph-go/pull/45) adding this feature.
 
 To mark every station on the map (`/stations` API call), a simple Cypher query is used:
 
@@ -65,7 +65,7 @@ This is my _first ever_ React project, be nice! ;)
 
 The offline importer iteratively downloads the public [Citi Bike trip data](https://www.citibikenyc.com/system-data), unzips each archive, and indexes all the trips into the `journeys` graph.
 
-The graph contains every `:Station` as a node, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of their location. All of the 58 million journeys are represented as increments on the edge between the `src` and `dst` stations. The graph is setup to aggregate trips based on their time of the week (`7*24` hour buckets). This graph could easily be extended to aggregate trips on other dimensions.
+The graph contains every `:Station` as a node, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of their location. Each of the 58 million journeys are represented as increments on the edge between the `src` and `dst` stations (there are ~800k unique `[src]->[dst]` edges). The graph is setup to aggregate trips based on the trip time of the week (into `7*24` hour buckets). This graph could easily be extended to also aggregate trips on other dimensions too.
 
 To index a single trip, the following Cypher query is used:
 
@@ -79,18 +79,18 @@ ON MATCH
   SET t.counts = t.counts[0..$hour] + [t.counts[$hour]+1] + t.counts[($hour+1)..168]
 ```
 
-This either created the edge, or increments the appropriate counter to index the trip.
+This either creates a new edge with one trip, or increments the appropriate counter on the edge to index the trip.
 
-To efficiently write all 56 million trips, I use [pipelining](https://redis.io/topics/pipelining) and [`CLIENT REPLY OFF`](https://redis.io/commands/client-reply) for each batch. The bulk import takes a couple of hours.
+To efficiently write all 56 million trips, I use [pipelining](https://redis.io/topics/pipelining) and turn [`CLIENT REPLY OFF`](https://redis.io/commands/client-reply) for each batch. The bulk import takes a couple of hours.
 
 ## How to run
 
 Start the visual UI using Docker Compose:
 
 ```sh
- $ docker build -t citibike-journeys backend
- $ cd frontend; yarn build; cd ..
- $ docker-compose up
+$ docker build -t citibike-journeys backend
+$ cd frontend; npm install; npm run-script build; cd ..
+$ docker-compose up
 
 redismod_1  | 1:C 13 May 2021 03:12:18.017 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
  [...]
@@ -105,6 +105,7 @@ nginx_1     | 172.18.0.1 - - [13/May/2021:03:13:02 +0000] "GET /api/journey_quer
 Then, start indexing the public dataset:
 
 ```sh
+$ cd offline_importer
 $ go run main.go --reset_graph=true
 2021/05/12 22:58:45 [importer] Importer running...
 2021/05/12 22:58:45 [importer] Resetting graph!
@@ -118,4 +119,4 @@ $ go run main.go --reset_graph=true
 2021/05/12 22:59:05 [dww.0]: Flushing 10000 commands, 10000 trips
 ```
 
-Each reload of the UI at http://localhost/ should show these trips accumulate.
+Each reload of the UI at http://localhost/ should show these trips accumulate. On the [live demo](https://citibike.mitchsw.com/), I use a prebuilt `dump.rdb` which is 674MB on disk.
