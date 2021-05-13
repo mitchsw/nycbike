@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mitchsw/citibike-journeys/backend/backend"
+	"github.com/mitchsw/nycbike/backend/backend"
 )
 
 func PrintVitals(mp *backend.ModelPool) {

@@ -1,4 +1,4 @@
-module github.com/mitchsw/citibike-journeys/backend
+module github.com/mitchsw/nycbike/backend
 
 go 1.16
 

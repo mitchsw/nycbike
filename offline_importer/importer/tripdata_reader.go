@@ -41,7 +41,7 @@ type Trip struct {
 	EndStationLong   float64
 }
 
-// A TripdataReader downloaded, decompresses, and parses a CitiBike System Data file.
+// A TripdataReader downloaded, decompresses, and parses a NYC Bike Trip Data file.
 type TripdataReader struct {
 	headerParsed        bool
 	startTimeIdx        int

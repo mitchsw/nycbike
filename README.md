@@ -1,14 +1,14 @@
-# Citibike Journeys
+# NYC Bike
 
 _[Build on Redis Hackathon](https://redislabs.com/hackathon-2021/) entry, mitchsw, 2021-05-12._
 
-A visual geospatial index of over 58 million bikeshare trips across NYC. This could be helpful to capacity plan across the network, allowing you to investigate aggregated rush hour and weekend travel patterns in milliseconds!
+A visual geospatial index of over 58 million [bikeshare trips](https://www.citibikenyc.com/system-data) across NYC. This could be helpful to capacity plan across the network, allowing you to investigate aggregated rush hour and weekend travel patterns in milliseconds!
 
-**Live Demo**: https://citibike.mitchsw.com/
+**Live Demo**: https://nycbike.mitchsw.com/
 
-![Full visual UI](https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/full_ui.png?raw=true)*Full visual UI.*
+![Full visual UI](https://raw.githubusercontent.com/mitchsw/nycbike/main/full_ui.png?raw=true)*Full visual UI.*
 
-![Zoomed-in UI](https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/zoom_ui.png?raw=true)*Zoomed-in view of trips between a few stations.*
+![Zoomed-in UI](https://raw.githubusercontent.com/mitchsw/nycbike/main/zoom_ui.png?raw=true)*Zoomed-in view of trips between a few stations.*
 
 ## System Overview
 
@@ -85,10 +85,16 @@ To efficiently write all 56 million trips, I use [pipelining](https://redis.io/t
 
 ## How to run
 
-Start the visual UI using Docker Compose:
+Create a [Mapbox Access Token](https://docs.mapbox.com/help/glossary/access-token/) and write it to `frontend/.env`:
 
 ```sh
-$ docker build -t citibike-journeys backend
+cat "REACT_APP_MAPBOX_ACCESS_TOKEN=<your-token>" > frontend/.env
+```
+
+Build the visual UI components, and run it using Docker Compose:
+
+```sh
+$ docker build -t nycbike backend
 $ cd frontend; npm install; npm run-script build; cd ..
 $ docker-compose up
 
@@ -102,7 +108,7 @@ nginx_1     | 172.18.0.1 - - [13/May/2021:03:13:02 +0000] "GET /api/journey_quer
  [...]
 ```
 
-Then, start indexing the public dataset:
+The frontend should now be accessible, but the map will be blank as Redis is empty. Now, start indexing the public dataset:
 
 ```sh
 $ cd offline_importer

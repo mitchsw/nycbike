@@ -48,13 +48,13 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    fetch(`${process.env.REACT_APP_BACKEND_URL}vitals`)
+    fetch(`/api/vitals`)
         .then((res) => res.json())
         .then((data) => {
           this.setState({vitals: data});
         })
         .catch(console.log);
-    fetch(`${process.env.REACT_APP_BACKEND_URL}stations`)
+    fetch(`/api/stations`)
         .then((res) => res.json())
         .then((data) => {
           this.setState({stations: data});
@@ -63,7 +63,7 @@ class App extends React.Component {
   }
 
   journeyQueryUrl(src, dst) {
-    return `${process.env.REACT_APP_BACKEND_URL}journey_query?src_lat=${src.center[1]}&src_long=${src.center[0]}&src_radius=${src.radiusInKm}&dst_lat=${dst.center[1]}&dst_long=${dst.center[0]}&dst_radius=${dst.radiusInKm}`;
+    return `/api/journey_query?src_lat=${src.center[1]}&src_long=${src.center[0]}&src_radius=${src.radiusInKm}&dst_lat=${dst.center[1]}&dst_long=${dst.center[0]}&dst_radius=${dst.radiusInKm}`;
   }
 
   onFeaturesUpdated(features) {
@@ -84,11 +84,11 @@ class App extends React.Component {
         <AppBar position="static" color="default" elevation={4} className={classes.appBar}>
           <Toolbar variant="dense" className={classes.toolbar}>
             <Typography variant="h6" color="inherit" noWrap className={classes.toolbarTitle}>
-              Citibike Journeys
+              NYC Bike
             </Typography>
             {this.state.vitals ? <Vitals {...this.state.vitals}/> : null}
             <IconButton
-              href="https://github.com/mitchsw/citibike-journeys"
+              href="https://github.com/mitchsw/nycbike"
               target="_blank"
               variant="outlined"
               style={{color: 'white', marginLeft: '10px'}}>

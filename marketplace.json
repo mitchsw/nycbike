@@ -1,12 +1,12 @@
 {
-    "app_name": "Citibike Journeys",
+    "app_name": "NYC Bike",
     "description": "A visual geospatial index of over 58 million bikeshare trips across NYC",
     "hidden": "true",
     "type": "App",
     "contributed_by": "mitchsw",
-    "repo_url": "https://github.com/mitchsw/citibike-journeys",
-    "download_url": "https://github.com/mitchsw/citibike-journeys/archive/refs/heads/main.zip",
-    "hosted_url": "https://citibike.mitchsw.com/",
+    "repo_url": "https://github.com/mitchsw/nycbike",
+    "download_url": "https://github.com/mitchsw/nycbike/archive/refs/heads/main.zip",
+    "hosted_url": "https://nycbike.mitchsw.com/",
     "quick_deploy": "false",
     "language": ["Go", "JavaScript"],
     "redis_commands": [
@@ -23,9 +23,9 @@
       "WITH"
     ],
     "redis_modules": ["RedisGraph"],
-    "app_image_urls": ["https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/full_ui.png?raw=true"],
+    "app_image_urls": ["https://raw.githubusercontent.com/mitchsw/nycbike/main/full_ui.png?raw=true"],
     "youtube_url": "",
     "special_tags": [],
     "verticals": ["Geospatial"],
-    "markdown": "https://raw.githubusercontent.com/mitchsw/citibike-journeys/main/README.md"
+    "markdown": "https://raw.githubusercontent.com/mitchsw/nycbike/main/README.md"
   }
