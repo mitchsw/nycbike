@@ -3,6 +3,7 @@ package backend
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -60,6 +61,10 @@ func (m *Model) Vitals() (*Vitals, error) {
 	var v Vitals
 	var err error
 	if v.TripCount, err = m.TripCount(); err != nil {
+		if err == redis.ErrNil {
+			log.Println("Vitals called, but database empty!")
+			return &v, nil
+		}
 		return nil, err
 	}
 	if v.StationCount, err = m.StationCount(); err != nil {
