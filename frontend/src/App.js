@@ -2,6 +2,7 @@ import React from 'react';
 import Map from './Map';
 import JourneyPaper from './JourneyPaper';
 import Vitals from './Vitals';
+import WelcomeDialog from './WelcomeDialog';
 import {withStyles} from '@material-ui/core';
 import AppBar from '@material-ui/core/AppBar';
 import IconButton from '@material-ui/core/IconButton';
@@ -105,6 +106,8 @@ class App extends React.Component {
         { this.state.journeys &&
           <JourneyPaper journeys={this.state.journeys} />
         }
+
+        <WelcomeDialog />
       </Box>
     );
   }

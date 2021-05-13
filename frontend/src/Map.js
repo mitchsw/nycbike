@@ -115,9 +115,6 @@ class Map extends React.Component {
 
     map.on('draw.drag', (e) => this.updateLine());
     map.on('draw.update', (e) => this.notifyParent());
-    map.on('draw.modechange', (e) => {
-      console.log(e.mode);
-    });
   }
 
   render() {
