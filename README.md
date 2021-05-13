@@ -88,8 +88,17 @@ To efficiently write all 56 million trips, I use [pipelining](https://redis.io/t
 Start the visual UI using Docker Compose:
 
 ```sh
- docker build -t citibike-journeys backend
- docker-compose up
+ $ docker build -t citibike-journeys backend
+ $ docker-compose up
+
+redismod_1  | 1:C 13 May 2021 03:12:18.017 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+ [...]
+backend_1   | 2021/05/13 03:09:35 Connected to Redis!
+backend_1   | 2021/05/13 03:09:55 Found 56030910 trips, 1575 stations, 777793 edges. Memory usage: 2.33G
+backend_1   | 2021/05/13 03:09:55 Running app on port 3000...
+ [...]
+nginx_1     | 172.18.0.1 - - [13/May/2021:03:13:02 +0000] "GET /api/journey_query?src_lat=40.715653603071786&src_long=-73.98651260399838&src_radius=0.7&dst_lat=40.75472153232781&dst_long=-73.98468539999953&dst_radius=1.2 HTTP/1.1" 200 1328 "http://localhost/" "Mozilla/5.0"
+ [...]
 ```
 
 Then, start indexing the public dataset:
