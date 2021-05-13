@@ -169,7 +169,7 @@ func (dww *dataWriterWorker) Send(commandName string, args ...interface{}) error
 }
 
 func (dww *dataWriterWorker) flushPipeline() error {
-	log.Printf("[dataWriterWorker.%v]: Flushing %v commands, %v trips", dww.id, dww.pipelineCnt, dww.tripCnt)
+	log.Printf("[dww.%v]: Flushing %v commands, %v trips", dww.id, dww.pipelineCnt, dww.tripCnt)
 	if err := dww.conn.Send("INCRBY", "trips", dww.tripCnt); err != nil {
 		return err
 	}

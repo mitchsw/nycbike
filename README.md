@@ -110,11 +110,11 @@ $ go run main.go --reset_graph=true
 2021/05/12 22:58:45 [dww.0]: Started
 2021/05/12 22:58:46 [importer] Scraping 1/164: https://s3.amazonaws.com/tripdata/201306-citibike-tripdata.zip
 2021/05/12 22:58:47 [tripdata_reader] Opened file: 201306-citibike-tripdata.csv
-2021/05/12 22:58:47 [dataWriterWorker.0]: Flushing 10000 commands, 9668 trips
-2021/05/12 22:58:52 [dataWriterWorker.0]: Flushing 10000 commands, 9998 trips
-2021/05/12 22:58:56 [dataWriterWorker.0]: Flushing 10000 commands, 10000 trips
-2021/05/12 22:59:01 [dataWriterWorker.0]: Flushing 10000 commands, 10000 trips
-2021/05/12 22:59:05 [dataWriterWorker.0]: Flushing 10000 commands, 10000 trips
+2021/05/12 22:58:47 [dww.0]: Flushing 10000 commands, 9668 trips
+2021/05/12 22:58:52 [dww.0]: Flushing 10000 commands, 9998 trips
+2021/05/12 22:58:56 [dww.0]: Flushing 10000 commands, 10000 trips
+2021/05/12 22:59:01 [dww.0]: Flushing 10000 commands, 10000 trips
+2021/05/12 22:59:05 [dww.0]: Flushing 10000 commands, 10000 trips
 ```
 
 Each reload of the UI at http://localhost/ should show these trips accumulate.
