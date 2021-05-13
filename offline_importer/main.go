@@ -11,8 +11,10 @@ import (
 )
 
 func main() {
-	redisAddress := flag.String("redis", "172.18.0.2:6379", "host:port address of Redis")
+	redisAddress := flag.String("redis", "localhost:6379", "host:port address of Redis")
 	resetGraph := flag.Bool("reset_graph", false, "Reset graph before importing. Should be true for first import")
+	flag.Parse()
+
 	log.SetOutput(os.Stdout)
 	pool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {

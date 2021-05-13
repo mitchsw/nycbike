@@ -7,6 +7,7 @@ services:
         restart: always
         volumes:
             - ./redis.conf:/usr/local/etc/redis/redis.conf
+            # Location of dump.rdb, containing the journeys graph.
             - ./redis_data/:/data/
 
     backend:
