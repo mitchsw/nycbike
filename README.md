@@ -108,7 +108,7 @@ nginx_1     | 172.18.0.1 - - [13/May/2021:03:13:02 +0000] "GET /api/journey_quer
  [...]
 ```
 
-The frontend should now be accessible, but the map will be blank as Redis is empty. Now, start indexing the public dataset:
+The frontend should now be accessible at http://localhost:80/, but the map will be blank as Redis is empty. Now, start indexing the public dataset:
 
 ```sh
 $ cd offline_importer
