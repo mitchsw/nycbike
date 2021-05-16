@@ -29,10 +29,10 @@ This project uses the [redismod](https://hub.docker.com/r/redislabs/redismod) Do
 
 The Go backend uses the [redisgraph-go](https://github.com/RedisGraph/redisgraph-go) library to proxy graph queries from the frontend. The Go library didn't support the new `point()` type, so I sent PR [redisgraph-go#45](https://github.com/RedisGraph/redisgraph-go/pull/45) adding this feature.
 
-To mark every station on the map (`/stations` API call), a simple Cypher query is used:
+To mark every station on the map (`/stations` API call), a simple Cypher query is used to fetch all the locations:
 
 ```sql
-MATCH (s:Station) RETURN count(s)
+MATCH (s:Station) RETURN s.loc
 ```
 
 To count all the edges in the graph (part of `/vitals` API call), another simple Cypher query is used:
@@ -53,7 +53,7 @@ RETURN
   ...
 ```
 
-This matches all the `:Stations` within the `$src` and `$dst` circles, and all the trip edges between these stations in both directions. This is a fast query due to the geospatial index on `:Station.loc` (see _offline_importer_ below). The returned `egress` is true if the trip started at `$src`, or false if it started at `$dst`. The aggregated trip graph presented on the UI is built by aggregating properties on these `:Trip` edges, for both egress and ingress traffic.
+This matches all the `:Stations` within the `$src` and `$dst` circles, and all the trip edges between these stations (in both directions). This is a fast query due to the **geospatial index** on `:Station.loc` (see _offline_importer_ below). The returned `egress` is true if the trip started at `$src`, or false if it started at `$dst`. The aggregated trip graph presented on the UI is built by aggregating properties on these `:Trip` edges, for both egress and ingress traffic.
 
 ### frontend
 
@@ -65,7 +65,13 @@ This is my _first ever_ React project, be nice! ;)
 
 The offline importer iteratively downloads the public [Citi Bike trip data](https://www.citibikenyc.com/system-data), unzips each archive, and indexes all the trips into the `journeys` graph.
 
-The graph contains every `:Station` as a node, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of their location. Each of the 58 million journeys are represented as increments on the edge between the `src` and `dst` stations (there are ~800k unique `[src]->[dst]` edges). The graph is setup to aggregate trips based on the trip time of the week (into `7*24` hour buckets). This graph could easily be extended to also aggregate trips on other dimensions too.
+The graph contains every `:Station` as a node, an index on the station ID, and a [geospatial index](https://oss.redislabs.com/redisgraph/commands/#indexing) of the station's locations:
+
+```sql
+CREATE INDEX ON :Station(loc)
+```
+
+Each of the 58 million journeys are represented as increments on the edge between the `src` and `dst` stations (there are ~818k unique `[src]->[dst]` edges). The graph is setup to aggregate trips based on the trip time of the week (into `7*24` hour buckets). This graph could easily be extended to also aggregate trips on other dimensions too.
 
 To index a single trip, the following Cypher query is used:
 
@@ -88,7 +94,7 @@ To efficiently write all 56 million trips, I use [pipelining](https://redis.io/t
 Create a [Mapbox Access Token](https://docs.mapbox.com/help/glossary/access-token/) and write it to `frontend/.env`:
 
 ```sh
-cat "REACT_APP_MAPBOX_ACCESS_TOKEN=<your-token>" > frontend/.env
+echo "REACT_APP_MAPBOX_ACCESS_TOKEN=<your-token>" > frontend/.env
 ```
 
 Build the visual UI components, and run it using Docker Compose:
@@ -125,4 +131,4 @@ $ go run main.go --reset_graph=true
 2021/05/12 22:59:05 [dww.0]: Flushing 10000 commands, 10000 trips
 ```
 
-Each reload of the UI at http://localhost/ should show these trips accumulate. On the [live demo](https://citibike.mitchsw.com/), I use a prebuilt `dump.rdb` which is 674MB on disk.
+Each reload of the UI at http://localhost:80/ should show these trips accumulate. On the [live demo](https://nycbike.mitchsw.com/), I use a prebuilt `dump.rdb` which is 674MB on disk.

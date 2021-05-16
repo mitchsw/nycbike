@@ -126,14 +126,14 @@ func (m *Model) GetStations() ([]Coord, error) {
 	// WARN: For redisgraph-so to understand RETURNING a point,
 	// https://github.com/RedisGraph/redisgraph-go/pull/45 is required.
 	res, err := m.graph.Query(
-		"MATCH (s:Station) RETURN s.name, s.loc")
+		"MATCH (s:Station) RETURN s.loc")
 	if err != nil {
 		return nil, err
 	}
 	var result []Coord
 	for res.Next() {
 		r := res.Record()
-		pos := r.GetByIndex(1).(map[string]float64)
+		pos := r.GetByIndex(0).(map[string]float64)
 		result = append(result, Coord{pos["latitude"], pos["longitude"]})
 	}
 	return result, nil
